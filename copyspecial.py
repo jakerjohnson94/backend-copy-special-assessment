@@ -12,55 +12,65 @@ import os
 import shutil
 import commands
 import argparse
-import glob
+
 
 """Copy Special exercise
 """
 
 
-def get_absolute_file_paths():
+def get_absolute_file_paths(directory):
     regex = r"(_{2,}[^_\W]+_{2,})"
-    result = [os.path.realpath(x)
-              for x in os.listdir('.') if re.search(regex, x)]
+    result = [os.path.realpath(x) for x in os.listdir(
+        directory) if re.search(regex, x)]
     return result
 
 
-def copy_files_to_dir(files, directory):
+def copy_files_to_dir(files, new_directory, current_directory):
 
-    full_directory = os.path.realpath('.') + '/' + directory
+    current_real_path = os.path.realpath(
+        current_directory) + '/' + str(new_directory)
 
-    if directory not in os.listdir('.'):
-        os.makedirs(full_directory, 0777)
-    for f in files:
-        if f not in os.listdir(full_directory):
-            shutil.copy(f, full_directory)
+    if new_directory not in os.listdir(current_directory):
+        os.makedirs(current_real_path, 0o777)
+
+    [shutil.copy(f, current_real_path)
+     for f in files if f not in os.listdir(current_real_path)]
+
+
+def create_app_parser():
+    parser = argparse.ArgumentParser()
+
+    parser.add_argument(
+        '--todir', help='name of dest dir for special files')
+    parser.add_argument(
+        '--tozip', help='dest zipfile for special files')
+    parser.add_argument('search_directory', help='directory to search in')
+    return parser.parse_args()
 
 
 def main():
 
-    # This snippet will help you get started with the argparse module.
-    parser = argparse.ArgumentParser()
-    parser.add_argument(
-        '--todir', help='dest dir for special files', action='store_true')
-    parser.add_argument(
-        '--tozip', help='dest zipfile for special files', action='store_true')
-    parser.add_argument('--directory')
-    args = parser.parse_args()
+    args = create_app_parser()
+
+    files = (get_absolute_file_paths(
+        args.search_directory))
+
     if not args.todir and not args.tozip:
-        for file in get_absolute_file_paths():
-            print (file)
+        for file_name in files:
+            print (file_name)
+
     elif args.todir:
-        copy_files_to_dir(get_absolute_file_paths(), args.directory)
+        copy_files_to_dir(files, args.todir, args.search_directory)
 
-    # TODO you must write your own code to get the cmdline args.
-    # Read the docs and examples for the argparse module about how to do this.
+    elif args.tozip:
+        command = 'zip -j {} {}'.format(args.tozip, ' '.join(files))
+        print("Command I'm going to do:")
+        print(command)
+        exit_code = os.system(command)
 
-    # Parsing command line arguments is a must-have skill.
-    # This is input data validation.  If something is wrong (or missing) with any
-    # required args, the general rule is to print a usage message and exit(1).
-
-    # +++your code here+++
-    # Call your functions
+        if exit_code > 0:
+            print('exiting with exit code {}').format(exit_code)
+            exit(exit_code)
 
 
 if __name__ == "__main__":
