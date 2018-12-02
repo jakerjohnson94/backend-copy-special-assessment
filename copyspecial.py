@@ -6,11 +6,9 @@
 # Google's Python Class
 # http://code.google.com/edu/languages/google-python-class/
 
-import sys
 import re
 import os
 import shutil
-import commands
 import argparse
 
 
@@ -45,6 +43,7 @@ def create_app_parser():
     parser.add_argument(
         '--tozip', help='dest zipfile for special files')
     parser.add_argument('search_directory', help='directory to search in')
+
     return parser.parse_args()
 
 
